@@ -35,6 +35,13 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Allow cleartext traffic (HTTP/WS for Tailscale)
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's|<application|<application android:usesCleartextTraffic="true"|' "$MANIFEST"
+          echo "=== Patched manifest ==="
+          head -5 "$MANIFEST"
+
       - name: Build APK
         working-directory: android
         run: ./gradlew assembleDebug
