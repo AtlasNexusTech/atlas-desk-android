@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
 /* ── Design Tokens ── */
 :root {
@@ -607,54 +608,62 @@ function disconnect() {
   setConnStatus('Disconnected', 'none');
 }
 
-// ── QR Scanner ──
+// ── QR Scanner (jsQR — works in Android WebView) ──
 async function startQRScan() {
   toast('Opening camera...');
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
-    const video = document.createElement('video'); video.srcObject = stream; video.play();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } });
+    const video = document.createElement('video');
+    video.setAttribute('playsinline', '');
+    video.srcObject = stream;
+    await video.play();
+
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center';
-    overlay.innerHTML = '<div style="position:relative;width:260px;height:260px;border:2px solid #2563EB;border-radius:16px;overflow:hidden"><video id="qrVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video></div><p style="color:#fff;margin-top:16px;font-size:14px;font-weight:600">Align QR code in frame</p><button style="margin-top:12px;padding:10px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;cursor:pointer;font-weight:600" id="qrCancel">Cancel</button>';
+    overlay.innerHTML = '<div style="position:relative;width:260px;height:260px;border:2px solid #2563EB;border-radius:16px;overflow:hidden"><canvas id="qrCanvas" style="width:100%;height:100%"></canvas></div><p style="color:#fff;margin-top:16px;font-size:14px;font-weight:600">Align QR code in frame</p><button style="margin-top:12px;padding:10px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;cursor:pointer;font-weight:600" id="qrCancel">Cancel</button>';
     document.body.appendChild(overlay);
-    document.getElementById('qrVideo').srcObject = stream;
 
-    let cancelled = false;
-    document.getElementById('qrCancel').onclick = () => { cancelled=true; overlay.remove(); stream.getTracks().forEach(t=>t.stop()); };
+    const canvas = document.getElementById('qrCanvas');
+    const ctx2d = canvas.getContext('2d');
+    let cancelled = false, lastScan = 0;
 
-    if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({ formats:['qr_code'] });
-      const cv = document.createElement('canvas'); const ct = cv.getContext('2d');
-      const poll = async () => {
-        if (cancelled) return;
-        cv.width = video.videoWidth; cv.height = video.videoHeight;
-        ct.drawImage(video, 0, 0);
-        try {
-          const codes = await detector.detect(cv);
-          if (codes.length) {
-            overlay.remove(); stream.getTracks().forEach(t=>t.stop());
-            parseQR(codes[0].rawValue); return;
+    document.getElementById('qrCancel').onclick = () => { cancelled = true; overlay.remove(); stream.getTracks().forEach(t => t.stop()); };
+
+    function tick() {
+      if (cancelled) return;
+      // Draw video frame to canvas
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      ctx2d.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Scan with jsQR (throttle to every 300ms)
+      const now = Date.now();
+      if (now - lastScan > 300) {
+        lastScan = now;
+        const imageData = ctx2d.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          overlay.remove();
+          stream.getTracks().forEach(t => t.stop());
+          if (code.data.startsWith('ws://') || code.data.startsWith('wss://')) {
+            $('signalUrl').value = code.data; saveSettings(); toast('✅ Signal URL set!');
+          } else if (code.data.startsWith('atlasdesk://')) {
+            const u = new URL(code.data);
+            if (u.searchParams.get('signal')) { $('signalUrl').value = u.searchParams.get('signal'); }
+            if (u.searchParams.get('agent')) { $('agentId').value = u.searchParams.get('agent'); }
+            saveSettings(); toast('✅ Config imported!');
+          } else {
+            toast('Invalid QR code');
           }
-        } catch(e) {}
-        setTimeout(poll, 500);
-      };
-      poll();
-    } else {
-      toast('QR scanner not supported — enter manually');
-      setTimeout(() => { overlay.remove(); stream.getTracks().forEach(t=>t.stop()); }, 3000);
+          return;
+        }
+      }
+      requestAnimationFrame(tick);
     }
-  } catch(e) { toast('Camera access denied'); }
-}
-
-function parseQR(value) {
-  if (value.startsWith('ws://') || value.startsWith('wss://')) {
-    $('signalUrl').value = value; saveSettings(); toast('✅ Signal URL set!');
-  } else if (value.startsWith('atlasdesk://')) {
-    const u = new URL(value);
-    if (u.searchParams.get('signal')) { $('signalUrl').value = u.searchParams.get('signal'); }
-    if (u.searchParams.get('agent')) { $('agentId').value = u.searchParams.get('agent'); }
-    saveSettings(); toast('✅ Config imported!');
-  } else { toast('Invalid QR code'); }
+    requestAnimationFrame(tick);
+  } catch(e) {
+    toast('Camera access denied — enter URL manually');
+    console.error('QR scan error:', e);
+  }
 }
 </script>
 </body>
