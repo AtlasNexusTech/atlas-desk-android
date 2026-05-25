@@ -1,0 +1,22 @@
+const config = {
+  appId: "tech.atlasnexus.atlasdesk",
+  appName: "Atlas Desk",
+  webDir: "www",
+  server: {
+    androidScheme: "https",
+  },
+  android: {
+    allowMixedContent: true,
+    webContentsDebuggingEnabled: false,
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 0,
+      launchAutoHide: true,
+      backgroundColor: "#0a0a0f",
+      showSpinner: false,
+    },
+  },
+};
+
+module.exports = config;
