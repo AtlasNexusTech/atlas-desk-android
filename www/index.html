@@ -1,150 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0a0a0f">
+<meta name="theme-color" content="#f8fafc">
 <title>◆ Atlas Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#141423;--surface2:#1a1a2e;--text:#e2e8f0;--muted:#64748b;--accent:#3b82f6;--accent2:#2563eb;--red:#ef4444;--green:#22c55e;--orange:#f59e0b;--border:rgba(255,255,255,0.06);--radius:14px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+/* ── Design Tokens ── */
+:root {
+  --primary: #2563EB; --primary-dark: #1D4ED8; --accent: #059669; --accent-dark: #047857;
+  --fg: #0F172A; --fg-muted: #475569; --fg-dim: #94A3B8;
+  --bg: #F8FAFC; --surface: rgba(255,255,255,0.72); --surface-solid: #FFFFFF;
+  --card-bg: rgba(255,255,255,0.65); --card-border: rgba(255,255,255,0.8);
+  --glass-blur: blur(24px); --glass-shadow: 0 8px 32px rgba(31,41,55,0.08);
+  --radius: 18px; --radius-sm: 12px;
+  --orb-1: rgba(37,99,235,0.12); --orb-2: rgba(5,150,105,0.10); --orb-3: rgba(139,92,246,0.08);
+  --gradient: linear-gradient(135deg, #2563EB, #059669);
+  --font-display: 'Rubik', system-ui, sans-serif;
+  --font-body: 'Nunito Sans', system-ui, sans-serif;
+  --red: #EF4444; --green: #10B981; --orange: #F59E0B;
+}
+[data-theme="dark"] {
+  --fg: #E2E8F0; --fg-muted: #94A3B8; --fg-dim: #64748B;
+  --bg: #0B1120; --surface: rgba(15,23,42,0.75); --surface-solid: #111827;
+  --card-bg: rgba(17,24,39,0.7); --card-border: rgba(255,255,255,0.08);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  --orb-1: rgba(37,99,235,0.08); --orb-2: rgba(5,150,105,0.06); --orb-3: rgba(139,92,246,0.05);
+}
 
-/* ── Splash / Connect Screen ── */
-#splash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:24px;transition:opacity 0.3s}
-#splash.hidden{display:none}
-.splash-logo{font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--accent),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-.splash-subtitle{color:var(--muted);font-size:13px;margin-top:-16px}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body);
+  height: 100vh; height: 100dvh; overflow: hidden;
+  display: flex; flex-direction: column;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  user-select: none; transition: background 0.4s, color 0.4s;
+}
 
-/* ── Card ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
-.card label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)}
-.card input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;outline:none;text-align:center;font-family:monospace;transition:border-color 0.2s}
-.card input:focus{border-color:var(--accent)}
-.card input::placeholder{color:var(--muted);opacity:0.6}
-.card button{width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:0.15s;background:var(--accent);color:#fff;letter-spacing:0.3px}
-.card button:active{transform:scale(0.97)}
-.card button:disabled{opacity:0.5;pointer-events:none}
+/* ── Ambient Orbs ── */
+.orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px); transition: background 0.4s, transform 0.4s; }
+.orb-1 { width: 300px; height: 300px; background: var(--orb-1); top: -80px; right: -60px; }
+.orb-2 { width: 250px; height: 250px; background: var(--orb-2); bottom: -60px; left: -40px; }
+.orb-3 { width: 200px; height: 200px; background: var(--orb-3); top: 50%; left: 50%; transform: translate(-50%,-50%); }
 
-/* ── Status badges ── */
-.status-row{display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:var(--muted);min-height:20px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
-.status-dot.ok{background:var(--green)}
-.status-dot.err{background:var(--red)}
-.status-dot.warn{background:var(--orange)}
+/* ── Theme Toggle ── */
+#themeToggle {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--card-border); background: var(--card-bg);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--glass-shadow); transition: 0.3s;
+}
 
-/* ── Settings row ── */
-.settings-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);justify-content:center;cursor:pointer;padding:8px}
-.settings-row:hover{color:var(--text)}
+/* ── Splash ── */
+#splash {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 20px; gap: 20px; position: relative; z-index: 1;
+  transition: opacity 0.3s, transform 0.3s;
+}
+#splash.hidden { display: none; }
+.splash-logo {
+  font-family: var(--font-display); font-size: 40px; font-weight: 900;
+  background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 4px; letter-spacing: -0.5px;
+}
+.splash-subtitle { color: var(--fg-muted); font-size: 14px; font-weight: 600; margin-top: -12px; }
+
+/* ── Glass Card ── */
+.glass-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 24px 20px;
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px;
+  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
+.glass-card label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--fg-muted); font-weight: 700;
+}
+.input-group { position: relative; }
+.glass-card input {
+  width: 100%; padding: 14px 16px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--card-border); background: rgba(255,255,255,0.5);
+  color: var(--fg); font-size: 15px; outline: none; text-align: center;
+  font-family: 'SF Mono', 'Fira Code', monospace; transition: 0.25s;
+}
+[data-theme="dark"] .glass-card input { background: rgba(255,255,255,0.04); }
+.glass-card input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+.glass-card input::placeholder { color: var(--fg-dim); font-family: var(--font-body); font-size: 13px; }
+
+/* ── Buttons ── */
+.btn {
+  width: 100%; padding: 15px; border-radius: var(--radius-sm); border: none;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  font-family: var(--font-body); letter-spacing: 0.3px; position: relative; overflow: hidden;
+}
+.btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+.btn-ghost {
+  background: transparent; border: 1.5px solid var(--card-border);
+  color: var(--fg-muted); font-weight: 600; backdrop-filter: var(--glass-blur);
+}
+.btn-ghost:active { background: rgba(37,99,235,0.08); }
+
+/* ── QR Scan Button ── */
+.qr-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: rgba(37,99,235,0.1); border: none; border-radius: 10px;
+  width: 36px; height: 36px; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: 0.2s; z-index: 2;
+}
+.qr-btn:active { background: rgba(37,99,235,0.2); }
+
+/* ── Status ── */
+.status-row {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  font-size: 13px; color: var(--fg-muted); min-height: 22px; font-weight: 600;
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-dim); flex-shrink: 0; }
+.status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.err { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.status-dot.warn { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
 
 /* ── Stream View ── */
-#stream{flex:1;display:none;flex-direction:column;background:#000;position:relative}
-#stream.active{display:flex}
-#streamBar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
-#streamBar .logo{font-weight:800;font-size:13px;background:linear-gradient(135deg,var(--accent),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;flex:1}
-.stream-btn{background:rgba(255,255,255,0.08);color:var(--text);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
-.stream-btn.danger{color:var(--red)}
-#streamStatus{font-size:11px;color:var(--muted)}
+#stream { flex: 1; display: none; flex-direction: column; background: #000; position: relative; }
+#stream.active { display: flex; }
+#viewport { flex: 1; display: flex; align-items: center; justify-content: center; cursor: crosshair; overflow: hidden; }
+#viewport video, #viewport canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-#viewport{flex:1;display:flex;align-items:center;justify-content:center;cursor:crosshair;overflow:hidden}
-#viewport video,#viewport canvas{max-width:100%;max-height:100%;object-fit:contain}
+/* ── Stream Top Bar ── */
+#streamBar {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+  background: var(--card-bg); backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--card-border); flex-shrink: 0; z-index: 10;
+}
+#streamBar .stream-logo {
+  font-family: var(--font-display); font-weight: 800; font-size: 14px;
+  background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; flex: 1;
+}
+#streamStatus { font-size: 11px; color: var(--fg-muted); font-weight: 600; }
 
 /* ── Overlays ── */
-.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);z-index:50;flex-direction:column;gap:16px}
-.overlay.show{display:flex}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.overlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 50; flex-direction: column; gap: 16px;
+}
+.overlay.show { display: flex; }
+.spinner {
+  width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loadingText { font-size: 14px; color: #fff; font-weight: 600; }
 
 /* ── Password Dialog ── */
-.dialog{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:60;padding:24px}
-.dialog.show{display:flex}
-.dialog-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;align-items:center}
-.dialog-box h2{font-size:18px}
-.dialog-box p{font-size:13px;color:var(--muted);text-align:center}
-.dialog-box input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;text-align:center;outline:none}
-.dialog-box input:focus{border-color:var(--accent)}
-.dialog-box button{width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
-.dialog-box .error{color:var(--red);font-size:12px;display:none}
+.dialog {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 60; padding: 24px;
+}
+.dialog.show { display: flex; }
+.dialog-box {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 28px 24px; width: 100%; max-width: 320px;
+  backdrop-filter: var(--glass-blur); box-shadow: var(--glass-shadow);
+  display: flex; flex-direction: column; gap: 12px; align-items: center;
+}
+.dialog-box h2 { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.dialog-box p { font-size: 13px; color: var(--fg-muted); text-align: center; }
+.dialog-box input {
+  width: 100%; padding: 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--card-border); background: rgba(255,255,255,0.5);
+  color: var(--fg); font-size: 15px; text-align: center; outline: none;
+}
+[data-theme="dark"] .dialog-box input { background: rgba(255,255,255,0.04); }
+.dialog-box input:focus { border-color: var(--primary); }
+.dialog-box .error { color: var(--red); font-size: 12px; display: none; font-weight: 600; }
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:10px 20px;font-size:13px;z-index:70;opacity:0;transition:opacity 0.3s;pointer-events:none}
-.toast.show{opacity:1}
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  backdrop-filter: var(--glass-blur); border-radius: 24px; padding: 10px 22px;
+  font-size: 13px; font-weight: 600; z-index: 70; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; color: var(--fg);
+}
+.toast.show { opacity: 1; }
 
-/* ── Stats bar ── */
-#statsBar{position:fixed;bottom:12px;left:12px;background:rgba(20,20,35,0.9);border:1px solid var(--border);border-radius:8px;padding:6px 10px;display:none;z-index:20;font-size:10px;font-family:monospace;color:var(--muted);gap:10px}
-#statsBar.show{display:flex}
-#statsBar .val{color:var(--text);font-weight:600}
+/* ── Stats Bar ── */
+#statsBar {
+  position: fixed; bottom: 12px; left: 12px;
+  background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px); border-radius: 8px; padding: 6px 10px;
+  display: none; z-index: 20; font-size: 10px; font-family: monospace; color: #94A3B8;
+  gap: 10px;
+}
+#statsBar.show { display: flex; }
+#statsBar .val { color: #fff; font-weight: 600; }
 
-/* ── Scan QR button ── */
-.qr-scan{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;z-index:2}
-.qr-scan:active{color:var(--accent)}
+/* ── Advanced Panel ── */
+.advanced-toggle {
+  text-align: center; font-size: 12px; color: var(--fg-dim); cursor: pointer;
+  padding: 6px; font-weight: 600; transition: 0.2s; z-index: 1;
+}
+.advanced-toggle:active { color: var(--primary); }
 </style>
 </head>
 <body>
 
-<!-- ── SPLASH: Connection screen ── -->
+<!-- Orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Theme Toggle -->
+<button id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">☀️</button>
+
+<!-- Splash -->
 <div id="splash">
-<div class="splash-logo">◆ Atlas Desk</div>
-<div class="splash-subtitle">P2P Remote Desktop</div>
-<div class="card">
-<label>Agent ID</label>
-<div style="position:relative">
-<input id="agentId" placeholder="LOQ" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off">
-<button class="qr-scan" onclick="startQRScan()" title="Scan QR code">📷</button>
-</div>
-<label>Signal Server</label>
-<input id="signalUrl" placeholder="ws://100.90.244.94:8800/ws" autocomplete="off" autocorrect="off" autocapitalize="off">
-<button id="connectBtn" onclick="connect()">🔗 Connect</button>
-<div class="status-row" id="connStatus"></div>
-</div>
-<div class="settings-row" onclick="toggleAdvanced()">⚙️ Advanced</div>
-<div id="advancedPanel" style="display:none;width:100%;max-width:360px">
-<div class="card" style="margin-top:8px">
-<label>STUN Server</label>
-<input id="stunUrl" placeholder="stun:stun.l.google.com:19302">
-<small style="color:var(--muted);font-size:11px;text-align:center">Change only if P2P fails behind NAT</small>
-</div>
-</div>
+  <div class="splash-logo">◆ Atlas Desk</div>
+  <div class="splash-subtitle">P2P Remote Desktop</div>
+
+  <div class="glass-card">
+    <label>Agent ID</label>
+    <div class="input-group">
+      <input id="agentId" placeholder="LOQ" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off">
+      <button class="qr-btn" onclick="startQRScan()" title="Scan QR code">📷</button>
+    </div>
+
+    <label>Signal Server</label>
+    <input id="signalUrl" placeholder="ws://100.90.244.94:8800/ws" autocomplete="off" autocorrect="off" autocapitalize="off">
+
+    <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
+
+    <div class="status-row" id="connStatus"></div>
+  </div>
+
+  <div class="advanced-toggle" onclick="toggleAdvanced()">⚙️ Advanced Settings</div>
+  <div id="advancedPanel" style="display:none;width:100%;max-width:360px">
+    <div class="glass-card" style="margin-top:4px;padding:16px 20px;gap:8px">
+      <label>STUN Server</label>
+      <input id="stunUrl" placeholder="stun:stun.l.google.com:19302" style="font-size:12px;padding:10px">
+    </div>
+  </div>
 </div>
 
-<!-- ── STREAM VIEW ── -->
+<!-- Stream View -->
 <div id="stream">
-<div id="streamBar">
-<span class="logo">◆ Atlas Desk</span>
-<span id="streamStatus">Streaming</span>
-<button class="stream-btn danger" onclick="disconnect()" style="margin-left:auto">✕</button>
-</div>
-<div id="viewport">
-<canvas id="canvas"></canvas>
-<video id="remoteVideo" autoplay playsinline muted style="display:none"></video>
-</div>
-<div class="toast" id="toast"></div>
-<div id="statsBar">
-<span>FPS<span class="val" id="sFPS">0</span></span>
-<span>↓<span class="val" id="sBW">0</span>KB</span>
-<span><span class="val" id="sType">-</span></span>
-</div>
+  <div id="streamBar">
+    <span class="stream-logo">◆ Atlas Desk</span>
+    <span id="streamStatus">Streaming</span>
+  </div>
+  <div id="viewport">
+    <canvas id="canvas"></canvas>
+    <video id="remoteVideo" autoplay playsinline muted style="display:none"></video>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div id="statsBar">
+    <span>FPS <span class="val" id="sFPS">0</span></span>
+    <span>↓ <span class="val" id="sBW">0</span> KB</span>
+    <span><span class="val" id="sType">-</span></span>
+  </div>
 </div>
 
-<!-- ── OVERLAYS ── -->
+<!-- Loading Overlay -->
 <div class="overlay" id="loadingOverlay">
-<div class="spinner"></div>
-<p style="font-size:13px;color:var(--muted)" id="loadingText">Connecting...</p>
+  <div class="spinner"></div>
+  <p id="loadingText">Connecting...</p>
 </div>
 
+<!-- Password Dialog -->
 <div class="dialog" id="passDialog">
-<div class="dialog-box">
-<h2>🔒 Password</h2>
-<p>This agent requires authentication</p>
-<input type="password" id="passInput" placeholder="Enter password" autocomplete="off">
-<button onclick="submitPassword()">Connect</button>
-<p class="error" id="passError">Wrong password</p>
-</div>
+  <div class="dialog-box">
+    <h2>🔒 Password</h2>
+    <p>This agent requires authentication</p>
+    <input type="password" id="passInput" placeholder="Enter password" autocomplete="off">
+    <button class="btn btn-primary" onclick="submitPassword()">Connect</button>
+    <p class="error" id="passError">Wrong password</p>
+  </div>
 </div>
 
 <script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  document.querySelector('meta[name="theme-color"]').content = next === 'dark' ? '#0B1120' : '#F8FAFC';
+  localStorage.setItem('ad-theme', next);
+}
+(function initTheme() {
+  const saved = localStorage.getItem('ad-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved === 'dark' ? '🌙' : '☀️';
+  document.querySelector('meta[name="theme-color"]').content = saved === 'dark' ? '#0B1120' : '#F8FAFC';
+})();
+
 // ── State ──
 let ws, pc, screenDC, fileDC, clipboardDC, _inputDC;
 let myId = 'android-' + Date.now().toString(36);
@@ -152,465 +313,348 @@ let canvas, ctx, img;
 let reconnectAttempts = 0, reconnectTimer = null, wasConnected = false;
 let pendingAgentId = null, authToken = null;
 let statsBytes = 0, statsFrames = 0, statsStart = 0, statsFPS = 0, statsTimer = null;
-let connectionTestDone = false;
 
-// ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
-canvas = document.getElementById('canvas');
-ctx = canvas.getContext('2d');
-img = new Image();
-loadSettings();
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  img = new Image();
+  loadSettings();
 });
 
 function $(id) { return document.getElementById(id); }
 
 // ── Settings ──
 function loadSettings() {
-const signal = localStorage.getItem('ad-signal');
-const agent = localStorage.getItem('ad-agent');
-const stun = localStorage.getItem('ad-stun');
-if (signal) $('signalUrl').value = signal;
-if (agent) $('agentId').value = agent;
-if (stun) $('stunUrl').value = stun;
+  const signal = localStorage.getItem('ad-signal');
+  const agent = localStorage.getItem('ad-agent');
+  const stun = localStorage.getItem('ad-stun');
+  if (signal) $('signalUrl').value = signal;
+  if (agent) $('agentId').value = agent;
+  if (stun) $('stunUrl').value = stun;
 }
-
 function saveSettings() {
-localStorage.setItem('ad-signal', $('signalUrl').value);
-localStorage.setItem('ad-agent', $('agentId').value);
-localStorage.setItem('ad-stun', $('stunUrl').value);
+  localStorage.setItem('ad-signal', $('signalUrl').value);
+  localStorage.setItem('ad-agent', $('agentId').value);
+  localStorage.setItem('ad-stun', $('stunUrl').value);
 }
-
 function toggleAdvanced() {
-const p = $('advancedPanel');
-p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  const p = $('advancedPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── Toast ──
 let toastTimer;
 function toast(msg, duration=2500) {
-const t = $('toast');
-t.textContent = msg;
-t.classList.add('show');
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
-// ── Connection Status ──
+// ── Status ──
 function setConnStatus(text, type) {
-const el = $('connStatus');
-const dots = {ok:'<span class="status-dot ok"></span>',err:'<span class="status-dot err"></span>',warn:'<span class="status-dot warn"></span>',none:'<span class="status-dot"></span>'};
-el.innerHTML = (dots[type]||dots.none) + ' ' + text;
+  const dots = { ok:'<span class="status-dot ok"></span> ', err:'<span class="status-dot err"></span> ', warn:'<span class="status-dot warn"></span> ', none:'' };
+  $('connStatus').innerHTML = (dots[type]||'') + text;
 }
+function showLoading(text) { $('loadingOverlay').classList.add('show'); if(text) $('loadingText').textContent = text; }
+function hideLoading() { $('loadingOverlay').classList.remove('show'); }
 
 // ── Connection Test ──
 async function testConnection(signalUrl) {
-setConnStatus('Testing server...', 'none');
-try {
-const httpUrl = signalUrl.replace('ws://','http://').replace('wss://','https://').replace('/ws','/');
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 5000);
-const resp = await fetch(httpUrl, { signal: controller.signal, mode: 'no-cors' });
-clearTimeout(timeout);
-setConnStatus('Server reachable ✓', 'ok');
-return true;
-} catch(e) {
-if (e.name === 'AbortError') {
-setConnStatus('Server timeout — check firewall/VPN', 'err');
-} else {
-setConnStatus('Server unreachable — check URL', 'err');
-}
-return false;
-}
+  setConnStatus('Testing server...', 'none');
+  try {
+    const httpUrl = signalUrl.replace('ws://','http://').replace('wss://','https://').replace('/ws','/');
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    await fetch(httpUrl, { signal: ctrl.signal, mode: 'no-cors' });
+    clearTimeout(t);
+    setConnStatus('Server reachable', 'ok');
+    return true;
+  } catch(e) {
+    if (e.name === 'AbortError') setConnStatus('Server timeout — check firewall', 'err');
+    else setConnStatus('Server unreachable — check URL', 'err');
+    return false;
+  }
 }
 
 // ── Connect ──
 async function connect() {
-const signalUrl = $('signalUrl').value.trim();
-const agentId = $('agentId').value.trim();
-if (!signalUrl || !agentId) {
-toast('Fill Agent ID and Signal URL');
-return;
-}
-saveSettings();
-pendingAgentId = agentId;
-reconnectAttempts = 0;
-wasConnected = false;
+  const signalUrl = $('signalUrl').value.trim();
+  const agentId = $('agentId').value.trim();
+  if (!signalUrl || !agentId) { toast('Fill Agent ID and Signal URL'); return; }
+  saveSettings();
+  pendingAgentId = agentId;
+  reconnectAttempts = 0; wasConnected = false;
 
-// Reset UI
-$('connectBtn').disabled = true;
-$('connectBtn').textContent = '⏳ Testing...';
+  $('connectBtn').disabled = true;
+  $('connectBtn').textContent = 'Testing...';
 
-// Connection test
-const reachable = await testConnection(signalUrl);
-if (!reachable) {
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Retry';
-return;
-}
+  const reachable = await testConnection(signalUrl);
+  if (!reachable) { $('connectBtn').disabled = false; $('connectBtn').textContent = 'Retry'; return; }
 
-// Proceed with WebSocket
-$('connectBtn').textContent = '⏳ Connecting...';
-showLoading('Signaling...');
+  $('connectBtn').textContent = 'Connecting...';
+  showLoading('Signaling...');
+  setConnStatus('Signaling...', 'warn');
 
-ws = new WebSocket(signalUrl);
-ws.onopen = () => {
-ws.send(JSON.stringify({
-type: 'register',
-payload: { id: myId, role: 'client' },
-target: agentId
-}));
-setConnStatus('Signaling...', 'warn');
-showLoading('P2P handshake...');
-};
-
-ws.onmessage = async (e) => {
-const msg = JSON.parse(e.data);
-switch (msg.type) {
-case 'auth_challenge':
-authToken = JSON.parse(msg.payload).token;
-$('passDialog').classList.add('show');
-$('passError').style.display = 'none';
-$('passInput').value = '';
-setTimeout(() => $('passInput').focus(), 100);
-hideLoading();
-break;
-case 'auth_failed':
-const failReason = JSON.parse(msg.payload).reason;
-$('passError').textContent = failReason === 'wrong_password' ? 'Wrong password' : 'Auth failed';
-$('passError').style.display = 'block';
-hideLoading();
-break;
-case 'error':
-handleError(msg);
-break;
-case 'offer':
-await handleOffer(msg, agentId);
-break;
-case 'ice_candidate':
-if (pc && msg.payload) {
-const ice = JSON.parse(msg.payload);
-pc.addIceCandidate(new RTCIceCandidate(ice)).catch(()=>{});
-}
-break;
-}
-};
-
-ws.onclose = (e) => {
-if (wasConnected) {
-attemptReconnect();
-} else if (!e.wasClean && pendingAgentId) {
-setConnStatus('Connection refused — agent offline?', 'err');
-hideLoading();
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Retry';
-} else {
-setConnStatus('Disconnected', 'none');
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Connect';
-}
-};
-
-ws.onerror = () => {
-setConnStatus('WebSocket error', 'err');
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Retry';
-};
+  ws = new WebSocket(signalUrl);
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type:'register', payload:{ id:myId, role:'client' }, target:agentId }));
+    showLoading('P2P handshake...');
+  };
+  ws.onmessage = async (e) => {
+    const msg = JSON.parse(e.data);
+    switch(msg.type) {
+      case 'auth_challenge':
+        authToken = JSON.parse(msg.payload).token;
+        $('passDialog').classList.add('show');
+        $('passError').style.display = 'none';
+        $('passInput').value = '';
+        setTimeout(() => $('passInput').focus(), 100);
+        hideLoading();
+        break;
+      case 'auth_failed':
+        $('passError').textContent = JSON.parse(msg.payload).reason === 'wrong_password' ? 'Wrong password' : 'Auth failed';
+        $('passError').style.display = 'block';
+        hideLoading();
+        break;
+      case 'error':
+        handleError(msg);
+        break;
+      case 'offer':
+        await handleOffer(msg, agentId);
+        break;
+      case 'ice_candidate':
+        if (pc && msg.payload) { pc.addIceCandidate(new RTCIceCandidate(JSON.parse(msg.payload))).catch(()=>{}); }
+        break;
+    }
+  };
+  ws.onclose = (e) => {
+    if (wasConnected) { attemptReconnect(); }
+    else {
+      hideLoading();
+      setConnStatus('Connection refused — agent offline?', 'err');
+      $('connectBtn').disabled = false;
+      $('connectBtn').textContent = 'Retry';
+    }
+  };
+  ws.onerror = () => {
+    setConnStatus('WebSocket error', 'err');
+    $('connectBtn').disabled = false;
+    $('connectBtn').textContent = 'Retry';
+  };
 }
 
 function handleError(msg) {
-const payload = JSON.parse(msg.payload || '{}');
-const reason = payload.reason || 'Unknown';
-hideLoading();
-setConnStatus(reason.replace('_',' '), 'err');
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Retry';
-if (ws) ws.close();
+  const p = JSON.parse(msg.payload || '{}');
+  hideLoading();
+  setConnStatus(p.reason ? p.reason.replace(/_/g,' ') : 'Error', 'err');
+  $('connectBtn').disabled = false;
+  $('connectBtn').textContent = 'Retry';
+  if (ws) ws.close();
 }
 
 function attemptReconnect() {
-if (reconnectAttempts >= 5) {
-hideLoading();
-setConnStatus('Max reconnects — check connection', 'err');
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Reconnect';
-return;
-}
-reconnectAttempts++;
-setConnStatus(`Reconnecting (${reconnectAttempts}/5)...`, 'warn');
-reconnectTimer = setTimeout(() => {
-$('connectBtn').textContent = '⏳ Reconnecting...';
-connect();
-}, 3000);
+  if (reconnectAttempts >= 5) {
+    hideLoading();
+    setConnStatus('Max reconnects — check connection', 'err');
+    $('connectBtn').disabled = false;
+    $('connectBtn').textContent = 'Reconnect';
+    return;
+  }
+  reconnectAttempts++;
+  setConnStatus(`Reconnecting (${reconnectAttempts}/5)...`, 'warn');
+  reconnectTimer = setTimeout(() => connect(), 3000);
 }
 
 // ── Password ──
 async function submitPassword() {
-const pass = $('passInput').value;
-if (!pass) return;
-$('passDialog').classList.remove('show');
-showLoading('Authenticating...');
-const pwHash = await sha256(pass);
-const proof = await sha256(pwHash + authToken);
-ws.send(JSON.stringify({
-type: 'auth_response', target: pendingAgentId, from: myId,
-payload: JSON.stringify({ proof })
-}));
+  const pass = $('passInput').value;
+  if (!pass) return;
+  $('passDialog').classList.remove('show');
+  showLoading('Authenticating...');
+  const pwHash = await sha256(pass);
+  const proof = await sha256(pwHash + authToken);
+  ws.send(JSON.stringify({ type:'auth_response', target:pendingAgentId, from:myId, payload:JSON.stringify({ proof }) }));
 }
-
 async function sha256(str) {
-const buf = new TextEncoder().encode(str);
-const hash = await crypto.subtle.digest('SHA-256', buf);
-return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── Offer / WebRTC ──
+// ── WebRTC ──
 async function handleOffer(msg, agentId) {
-const stunUrl = $('stunUrl').value.trim() || 'stun:stun.l.google.com:19302';
-const config = { iceServers: [{ urls: stunUrl }] };
-pc = new RTCPeerConnection(config);
+  const stun = $('stunUrl').value.trim() || 'stun:stun.l.google.com:19302';
+  pc = new RTCPeerConnection({ iceServers: [{ urls: stun }] });
 
-const inputDC = pc.createDataChannel('input');
-_inputDC = inputDC;
-inputDC.onopen = () => toast('⚡ P2P Ready');
+  _inputDC = pc.createDataChannel('input');
+  _inputDC.onopen = () => toast('⚡ P2P Ready');
 
-pc.ondatachannel = (event) => {
-const dc = event.channel;
-if (dc.label === 'screen') {
-screenDC = dc;
-dc.onmessage = handleScreenFrame;
-dc.binaryType = 'arraybuffer';
-dc.onopen = () => onStreamStart();
-} else if (dc.label === 'files') {
-fileDC = dc;
-dc.onopen = () => toast('📁 File transfer ready');
-} else if (dc.label === 'clipboard') {
-clipboardDC = dc;
-dc.onopen = () => toast('📋 Clipboard sync ready');
-}
-};
+  pc.ondatachannel = (event) => {
+    const dc = event.channel;
+    if (dc.label === 'screen') {
+      screenDC = dc; dc.onmessage = handleScreenFrame; dc.binaryType = 'arraybuffer';
+      dc.onopen = () => onStreamStart();
+    } else if (dc.label === 'files') { fileDC = dc; dc.onopen = () => toast('📁 Files ready'); }
+    else if (dc.label === 'clipboard') { clipboardDC = dc; dc.onopen = () => toast('📋 Clipboard ready'); }
+  };
 
-pc.ontrack = (event) => {
-const stream = event.streams[0];
-if (!stream) return;
-const rv = $('remoteVideo');
-rv.srcObject = stream;
-$('canvas').style.display = 'none';
-rv.style.display = '';
-rv.onloadedmetadata = () => {
-rv.play().catch(()=>{});
-onStreamStart();
-toast('🎥 H.264 Streaming');
-};
-};
+  pc.ontrack = (event) => {
+    const stream = event.streams[0];
+    if (!stream) return;
+    const rv = $('remoteVideo');
+    rv.srcObject = stream;
+    $('canvas').style.display = 'none';
+    rv.style.display = '';
+    rv.onloadedmetadata = () => { rv.play().catch(()=>{}); onStreamStart(); toast('🎥 H.264'); };
+  };
 
-pc.onicecandidate = (e) => {
-if (e.candidate && ws) {
-ws.send(JSON.stringify({
-type: 'ice_candidate', target: agentId,
-payload: JSON.stringify({ candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid })
-}));
-}
-};
+  pc.onicecandidate = (e) => {
+    if (e.candidate && ws) ws.send(JSON.stringify({ type:'ice_candidate', target:agentId, payload:JSON.stringify({ candidate:e.candidate.candidate, sdpMid:e.candidate.sdpMid }) }));
+  };
 
-const offer = JSON.parse(msg.payload);
-await pc.setRemoteDescription(new RTCSessionDescription(offer));
-const answer = await pc.createAnswer();
-await pc.setLocalDescription(answer);
-ws.send(JSON.stringify({
-type: 'answer', target: agentId,
-payload: JSON.stringify({ sdp: answer.sdp, type: 'answer' })
-}));
+  const offer = JSON.parse(msg.payload);
+  await pc.setRemoteDescription(new RTCSessionDescription(offer));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  ws.send(JSON.stringify({ type:'answer', target:agentId, payload:JSON.stringify({ sdp:answer.sdp, type:'answer' }) }));
 }
 
 function onStreamStart() {
-hideLoading();
-wasConnected = true;
-reconnectAttempts = 0;
-$('splash').classList.add('hidden');
-$('stream').classList.add('active');
-$('streamStatus').textContent = '⚡ Streaming';
-$('streamStatus').style.color = 'var(--green)';
-resetStats();
-statsTimer = setInterval(updateStats, 1000);
-$('statsBar').classList.add('show');
+  hideLoading(); wasConnected = true; reconnectAttempts = 0;
+  $('splash').classList.add('hidden'); $('stream').classList.add('active');
+  $('streamStatus').textContent = '⚡ Streaming'; $('streamStatus').style.color = 'var(--green)';
+  resetStats(); statsTimer = setInterval(updateStats, 1000); $('statsBar').classList.add('show');
 }
 
-// ── Screen Frame ──
+// ── Screen Frames ──
 function handleScreenFrame(event) {
-if (!(event.data instanceof ArrayBuffer)) return;
-const data = new Uint8Array(event.data);
-const view = new DataView(data.buffer);
-let offset = 0;
-if (offset >= data.length) return;
-const frameType = data[offset]; offset++;
-if (offset + 4 > data.length) return;
-const metaLen = view.getUint32(offset); offset += 4;
-if (offset + metaLen > data.length) return;
-const metaJSON = new TextDecoder().decode(data.slice(offset, offset + metaLen));
-const meta = JSON.parse(metaJSON);
-offset += metaLen;
+  if (!(event.data instanceof ArrayBuffer)) return;
+  const data = new Uint8Array(event.data);
+  const view = new DataView(data.buffer);
+  let offset = 0;
+  if (offset >= data.length) return;
+  const frameType = data[offset]; offset++;
+  if (offset + 4 > data.length) return;
+  const metaLen = view.getUint32(offset); offset += 4;
+  if (offset + metaLen > data.length) return;
+  const metaJSON = new TextDecoder().decode(data.slice(offset, offset + metaLen));
+  const meta = JSON.parse(metaJSON);
+  offset += metaLen;
 
-if (frameType === 0x00) {
-if (offset + 4 > data.length) return;
-const jpgLen = view.getUint32(offset); offset += 4;
-if (offset + jpgLen > data.length) return;
-const jpgData = data.slice(offset, offset + jpgLen);
-const blob = new Blob([jpgData], { type: 'image/jpeg' });
-const url = URL.createObjectURL(blob);
-img.onload = () => {
-canvas.width = meta.w; canvas.height = meta.h;
-ctx.drawImage(img, 0, 0);
-URL.revokeObjectURL(url);
-};
-img.src = url;
-}
-
-statsFrames++;
-statsBytes += event.data.byteLength;
-if (meta.f % 60 === 0) {
-const type = frameType === 0x00 ? 'FULL' : 'DIFF';
-$('sType').textContent = type;
-$('streamStatus').textContent = `⚡ ${meta.w}x${meta.h} ${type}`;
-}
+  if (frameType === 0x00) {
+    if (offset + 4 > data.length) return;
+    const jpgLen = view.getUint32(offset); offset += 4;
+    if (offset + jpgLen > data.length) return;
+    const blob = new Blob([data.slice(offset, offset + jpgLen)], { type:'image/jpeg' });
+    const url = URL.createObjectURL(blob);
+    img.onload = () => { canvas.width = meta.w; canvas.height = meta.h; ctx.drawImage(img, 0, 0); URL.revokeObjectURL(url); };
+    img.src = url;
+  }
+  statsFrames++; statsBytes += event.data.byteLength;
+  if (meta.f % 60 === 0) {
+    $('sType').textContent = frameType === 0x00 ? 'FULL' : 'DIFF';
+    $('streamStatus').textContent = `⚡ ${meta.w}x${meta.h}`;
+  }
 }
 
 function resetStats() { statsBytes=0; statsFrames=0; statsStart=Date.now(); $('sFPS').textContent='0'; $('sBW').textContent='0'; }
 function updateStats() {
-const elapsed = (Date.now()-statsStart)/1000;
-if (elapsed > 0.5) {
-$('sFPS').textContent = Math.round(statsFrames/elapsed);
-$('sBW').textContent = Math.round(statsBytes/elapsed/1024);
-}
+  const elapsed = (Date.now()-statsStart)/1000;
+  if (elapsed > 0.5) { $('sFPS').textContent = Math.round(statsFrames/elapsed); $('sBW').textContent = Math.round(statsBytes/elapsed/1024); }
 }
 
-// ── Input ──
-document.addEventListener('DOMContentLoaded', () => {
-const attachInput = () => {
-const target = $('viewport');
-if (!target) return;
-target.addEventListener('touchstart', (e) => {
-if (!_inputDC || _inputDC.readyState !== 'open') return;
-e.preventDefault();
-const touch = e.touches[0];
-const rect = target.getBoundingClientRect();
-const x = Math.round((touch.clientX-rect.left)*1920/rect.width);
-const y = Math.round((touch.clientY-rect.top)*1080/rect.height);
-_inputDC.send(JSON.stringify({action:'mouse_move',x,y}));
-_inputDC.send(JSON.stringify({action:'mouse_click',button:'left'}));
-});
-// Pinch to scroll
-let lastDist = 0;
-target.addEventListener('touchmove', (e) => {
-if (!_inputDC || _inputDC.readyState !== 'open') return;
-e.preventDefault();
-if (e.touches.length === 2) {
-const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-if (lastDist) _inputDC.send(JSON.stringify({action:'scroll',dy:dist>lastDist?-1:1}));
-lastDist = dist;
-} else if (e.touches.length === 1) {
-const rect = target.getBoundingClientRect();
-_inputDC.send(JSON.stringify({action:'mouse_move',x:Math.round((e.touches[0].clientX-rect.left)*1920/rect.width),y:Math.round((e.touches[0].clientY-rect.top)*1080/rect.height)}));
-}
-});
-target.addEventListener('touchend', () => { lastDist = 0; });
-};
-setTimeout(attachInput, 500);
-});
+// ── Touch Input ──
+setTimeout(() => {
+  const vp = $('viewport');
+  if (!vp) return;
+  vp.addEventListener('touchstart', (e) => {
+    if (!_inputDC || _inputDC.readyState!=='open') return;
+    e.preventDefault();
+    const t = e.touches[0], rect = vp.getBoundingClientRect();
+    _inputDC.send(JSON.stringify({ action:'mouse_move', x:Math.round((t.clientX-rect.left)*1920/rect.width), y:Math.round((t.clientY-rect.top)*1080/rect.height) }));
+    _inputDC.send(JSON.stringify({ action:'mouse_click', button:'left' }));
+  });
+  let lastDist = 0;
+  vp.addEventListener('touchmove', (e) => {
+    if (!_inputDC || _inputDC.readyState!=='open') return;
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      if (lastDist) _inputDC.send(JSON.stringify({ action:'scroll', dy:dist>lastDist?-1:1 }));
+      lastDist = dist;
+    } else {
+      const rect = vp.getBoundingClientRect();
+      _inputDC.send(JSON.stringify({ action:'mouse_move', x:Math.round((e.touches[0].clientX-rect.left)*1920/rect.width), y:Math.round((e.touches[0].clientY-rect.top)*1080/rect.height) }));
+    }
+  });
+  vp.addEventListener('touchend', () => { lastDist=0; });
+}, 500);
 
 // ── Disconnect ──
 function disconnect() {
-if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-wasConnected = false;
-pendingAgentId = null;
-if (_inputDC) _inputDC.close();
-if (screenDC) screenDC.close();
-if (fileDC) fileDC.close();
-if (clipboardDC) clipboardDC.close();
-if (pc) pc.close();
-if (ws) ws.close();
-_inputDC = screenDC = fileDC = clipboardDC = pc = ws = null;
-img = new Image();
-if (ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
-$('stream').classList.remove('active');
-$('splash').classList.remove('hidden');
-$('passDialog').classList.remove('show');
-hideLoading();
-if (statsTimer) clearInterval(statsTimer);
-$('statsBar').classList.remove('show');
-$('connectBtn').disabled = false;
-$('connectBtn').textContent = '🔗 Connect';
-setConnStatus('Disconnected', 'none');
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  wasConnected = false; pendingAgentId = null;
+  if (_inputDC) _inputDC.close(); if (screenDC) screenDC.close();
+  if (fileDC) fileDC.close(); if (clipboardDC) clipboardDC.close();
+  if (pc) pc.close(); if (ws) ws.close();
+  _inputDC=screenDC=fileDC=clipboardDC=pc=ws=null;
+  img = new Image(); if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
+  $('stream').classList.remove('active'); $('splash').classList.remove('hidden');
+  $('passDialog').classList.remove('show'); hideLoading();
+  if(statsTimer) clearInterval(statsTimer); $('statsBar').classList.remove('show');
+  $('connectBtn').disabled = false; $('connectBtn').textContent = 'Connect';
+  setConnStatus('Disconnected', 'none');
 }
 
-// ── Loading ──
-function showLoading(text) { $('loadingOverlay').classList.add('show'); if (text) $('loadingText').textContent = text; }
-function hideLoading() { $('loadingOverlay').classList.remove('show'); }
-
-// ── QR Scan ──
+// ── QR Scanner ──
 async function startQRScan() {
-toast('Opening camera...');
-try {
-const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-// Simple screenshot-based QR — user aligns QR in frame
-const video = document.createElement('video');
-video.srcObject = stream;
-video.play();
-const overlay = document.createElement('div');
-overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center';
-overlay.innerHTML = '<div style="position:relative;width:280px;height:280px;border:2px solid var(--accent);border-radius:16px;overflow:hidden"><video id="qrVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video></div><p style="color:var(--text);margin-top:16px;font-size:14px">Align QR code in frame</p><button style="margin-top:12px;padding:10px 24px;border-radius:10px;border:none;background:rgba(255,255,255,0.1);color:var(--text);font-size:14px;cursor:pointer" id="qrCancel">Cancel</button>';
-document.body.appendChild(overlay);
-document.getElementById('qrVideo').srcObject = stream;
+  toast('Opening camera...');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
+    const video = document.createElement('video'); video.srcObject = stream; video.play();
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center';
+    overlay.innerHTML = '<div style="position:relative;width:260px;height:260px;border:2px solid #2563EB;border-radius:16px;overflow:hidden"><video id="qrVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video></div><p style="color:#fff;margin-top:16px;font-size:14px;font-weight:600">Align QR code in frame</p><button style="margin-top:12px;padding:10px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;cursor:pointer;font-weight:600" id="qrCancel">Cancel</button>';
+    document.body.appendChild(overlay);
+    document.getElementById('qrVideo').srcObject = stream;
 
-// Poll for QR (simplified: user manually enters)
-let cancelled = false;
-document.getElementById('qrCancel').onclick = () => { cancelled = true; overlay.remove(); stream.getTracks().forEach(t=>t.stop()); };
+    let cancelled = false;
+    document.getElementById('qrCancel').onclick = () => { cancelled=true; overlay.remove(); stream.getTracks().forEach(t=>t.stop()); };
 
-// Try BarcodeDetector
-if ('BarcodeDetector' in window) {
-const detector = new BarcodeDetector({ formats: ['qr_code'] });
-const canvas = document.createElement('canvas');
-const ctx2d = canvas.getContext('2d');
-const poll = async () => {
-if (cancelled) return;
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
-ctx2d.drawImage(video, 0, 0);
-try {
-const barcodes = await detector.detect(canvas);
-if (barcodes.length > 0) {
-const url = barcodes[0].rawValue;
-overlay.remove(); stream.getTracks().forEach(t=>t.stop());
-parseQRValue(url);
-return;
-}
-} catch(e) {}
-setTimeout(poll, 500);
-};
-poll();
-} else {
-toast('QR scanner not supported — enter manually');
-setTimeout(() => { overlay.remove(); stream.getTracks().forEach(t=>t.stop()); }, 3000);
-}
-} catch(e) {
-toast('Camera access denied');
-}
+    if ('BarcodeDetector' in window) {
+      const detector = new BarcodeDetector({ formats:['qr_code'] });
+      const cv = document.createElement('canvas'); const ct = cv.getContext('2d');
+      const poll = async () => {
+        if (cancelled) return;
+        cv.width = video.videoWidth; cv.height = video.videoHeight;
+        ct.drawImage(video, 0, 0);
+        try {
+          const codes = await detector.detect(cv);
+          if (codes.length) {
+            overlay.remove(); stream.getTracks().forEach(t=>t.stop());
+            parseQR(codes[0].rawValue); return;
+          }
+        } catch(e) {}
+        setTimeout(poll, 500);
+      };
+      poll();
+    } else {
+      toast('QR scanner not supported — enter manually');
+      setTimeout(() => { overlay.remove(); stream.getTracks().forEach(t=>t.stop()); }, 3000);
+    }
+  } catch(e) { toast('Camera access denied'); }
 }
 
-function parseQRValue(value) {
-if (value.startsWith('ws://') || value.startsWith('wss://')) {
-$('signalUrl').value = value;
-saveSettings();
-toast('✅ Signal URL set!');
-} else if (value.startsWith('atlasdesk://')) {
-const u = new URL(value);
-const signal = u.searchParams.get('signal');
-const agent = u.searchParams.get('agent');
-if (signal) { $('signalUrl').value = signal; saveSettings(); }
-if (agent) { $('agentId').value = agent; saveSettings(); }
-toast('✅ Config imported!');
-} else {
-toast('Invalid QR code');
-}
+function parseQR(value) {
+  if (value.startsWith('ws://') || value.startsWith('wss://')) {
+    $('signalUrl').value = value; saveSettings(); toast('✅ Signal URL set!');
+  } else if (value.startsWith('atlasdesk://')) {
+    const u = new URL(value);
+    if (u.searchParams.get('signal')) { $('signalUrl').value = u.searchParams.get('signal'); }
+    if (u.searchParams.get('agent')) { $('agentId').value = u.searchParams.get('agent'); }
+    saveSettings(); toast('✅ Config imported!');
+  } else { toast('Invalid QR code'); }
 }
 </script>
 </body>
